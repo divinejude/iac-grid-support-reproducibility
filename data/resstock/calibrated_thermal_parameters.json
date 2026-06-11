@@ -1,0 +1,48 @@
+{
+  "source": "NREL ResStock AMY2018 2024 release 2, baseline upgrade 0, EnergyPlus outputs",
+  "dataset_url": "https://oedi-data-lake.s3.amazonaws.com/nrel-pds-building-stock/end-use-load-profiles-for-us-building-stock/2024/resstock_amy2018_release_2",
+  "documentation_url": "https://oedi-data-lake.s3.amazonaws.com/nrel-pds-building-stock/end-use-load-profiles-for-us-building-stock/2024/resstock_amy2018_release_2/resstock_documentation_2024_release_2.pdf",
+  "building_id": 100025,
+  "state": "TX",
+  "metadata": {
+    "sqft": 1698.0,
+    "county": "G4804530",
+    "county_name": "Travis County",
+    "city": "TX, Pflugerville",
+    "weather_file_city": "Austin Camp Mabry",
+    "cooling_setpoint": "75F",
+    "cooling_efficiency": "AC, SEER 15",
+    "cooling_type": "Central AC",
+    "building_type": "Single-Family Detached",
+    "cooling_system_size_kbtu_h": 44.67,
+    "annual_cooling_electric_kwh": 4795.521921228072,
+    "annual_cooling_delivered_kbtu": 56239.0
+  },
+  "fit_window": {
+    "start": "2018-07-18 00:00:00",
+    "end": "2018-07-31 23:45:00",
+    "samples": 1344,
+    "window_days": 14
+  },
+  "fit_quality": {
+    "indoor_temperature_rmse_c": 0.10228563587748668,
+    "sample_count": 1344,
+    "median_observed_cop": 3.4656531767893086
+  },
+  "thermal_parameters": {
+    "ambient_temperature_c": 31.800000000000004,
+    "setpoint_c": 23.88888888888889,
+    "comfort_band_c": 1.0,
+    "resistance_c_per_kw": 2.7155349371558803,
+    "capacitance_kwh_per_c": 39.99999999999999,
+    "cop": 3.4656531767893086,
+    "cop_temperature_slope_per_c": -0.019191990339887305,
+    "internal_gain_kw": 2.39440727623301
+  },
+  "notes": [
+    "Indoor temperature is out.zone_mean_air_temp.conditioned_space.c from EnergyPlus/ResStock timeseries.",
+    "Cooling electric power is interval cooling electricity divided by 0.25 h.",
+    "Cooling capacity is EnergyPlus delivered cooling load converted from kBtu per interval to kW.",
+    "The RC model is first order and is fitted on the highest-cooling contiguous window to avoid heating-season mismatch."
+  ]
+}

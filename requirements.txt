@@ -1,0 +1,8 @@
+numpy>=1.26
+scipy>=1.11
+cvxpy>=1.4
+control>=0.10
+matplotlib>=3.8
+opendssdirect.py>=0.9
+pandas>=2.2
+pyarrow>=15.0

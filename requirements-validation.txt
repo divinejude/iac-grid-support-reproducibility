@@ -1,0 +1,13 @@
+# Optional nonlinear transient-stability validation layer.
+#
+# On Windows, enable long paths if a normal ANDES install fails while copying
+# Jupyter widget assets, or install the runtime with:
+#   python -m pip install andes --no-deps
+#   python -m pip install chardet pyyaml texttable openpyxl pathos dill
+andes>=2.0
+chardet>=5.2
+pyyaml>=6.0
+texttable>=1.7
+openpyxl>=3.1
+pathos>=0.3
+dill>=0.3

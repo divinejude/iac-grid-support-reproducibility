@@ -1,0 +1,13 @@
+! Reference OpenDSS feeder used by OpenDSSFeeder.
+! The Python adapter edits Vsource.Source pu and Load.IAC kw/kvar each step.
+
+Clear
+New Circuit.IACFeeder basekv=0.24 pu=1.0 phases=1 bus1=source.1 frequency=60
+Edit Vsource.Source bus1=source.1 phases=1 basekv=0.24 pu=1.0 angle=0 frequency=60
+New Line.Feeder bus1=source.1 bus2=pcc.1 phases=1 r1=0.018 x1=0.045 r0=0.018 x0=0.045 c1=0 c0=0 length=1 units=none
+New Load.Fixed bus1=pcc.1 phases=1 conn=wye kv=0.24 kw=3 kvar=1 model=1
+New Load.IAC bus1=pcc.1 phases=1 conn=wye kv=0.24 kw=0 kvar=0 model=1
+Set VoltageBases=[0.24]
+CalcVoltageBases
+Set MaxControlIter=100
+Solve mode=snap

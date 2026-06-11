@@ -1,0 +1,45 @@
+{
+  "source": "NIST Net-Zero Energy Residential Test Facility measured minute-resolution data",
+  "dataset_url": "https://pages.nist.gov/netzero/data.html",
+  "documentation_url": "https://pages.nist.gov/netzero/learn.html",
+  "year": 2015,
+  "metadata": {
+    "facility": "NIST Net-Zero Energy Residential Test Facility",
+    "data_type": "measured residential test-facility data",
+    "indoor_temperature": "mean of occupied-zone room temperature sensors",
+    "outdoor_temperature": "OutEnv_OutdoorAmbTemp",
+    "hvac_power": "HVAC_HeatPumpIndoorUnitPower + HVAC_HeatPumpOutdoorUnitPower",
+    "cooling_detection": "power >= 0.5 kW, outdoor >= 18.0 deg C, supply-return delta <= -1.5 deg C"
+  },
+  "fit_window": {
+    "start": "2015-07-19 00:00:42",
+    "end": "2015-08-01 23:59:56",
+    "samples": 20133,
+    "window_days": 14
+  },
+  "fit_quality": {
+    "indoor_temperature_rmse_c": 0.11428946527403042,
+    "indoor_temperature_mae_c": 0.07708948109167306,
+    "active_cooling_rmse_c": 0.12961635177213254,
+    "sample_count": 20133,
+    "active_cooling_sample_count": 13286,
+    "mean_active_cooling_power_kw": 1.2137958602288121,
+    "median_effective_cop_active": 1.4787212636005087,
+    "mean_effective_cooling_capacity_kw": 1.7716571415799542
+  },
+  "thermal_parameters": {
+    "ambient_temperature_c": 26.242891553525887,
+    "setpoint_c": 23.421689690233784,
+    "comfort_band_c": 1.0,
+    "resistance_c_per_kw": 11.470187519766158,
+    "capacitance_kwh_per_c": 79.99999846614858,
+    "cop": 1.5334618883774829,
+    "cop_temperature_slope_per_c": -0.028671561167358563,
+    "internal_gain_kw": 0.9452944843998828
+  },
+  "notes": [
+    "NIST HVAC supply and return air temperatures are used only to classify cooling operation.",
+    "Cooling capacity is inferred as effective COP times measured heat-pump electric power because the public minute HVAC file does not directly report delivered cooling load.",
+    "The fitted parameters are effective whole-building RC/COP parameters for the NZERTF test house, not room-by-room physical envelope constants."
+  ]
+}
