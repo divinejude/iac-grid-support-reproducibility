@@ -10,9 +10,9 @@ The experiment runner evaluates five controller modes:
 
 - `no_support`: fixed active power, no reactive support
 - `rule_based`: five-region Frequency-Watt plus Volt-Var
-- `dmpc_active_only`: DMPC active power with reactive support disabled
-- `dmpc_pq`: DMPC active power plus separate Volt-Var reactive support
-- `dmpc_full_pq`: full P/Q DMPC with OpenDSS voltage sensitivity and inverter circle constraints
+- `dmpc_active_only`: fleet MPC active power with reactive support disabled
+- `dmpc_pq`: fleet MPC active power plus separate Volt-Var reactive support
+- `dmpc_full_pq`: full P/Q MPC with OpenDSS voltage sensitivity and inverter circle constraints
 
 Each case writes:
 
@@ -43,10 +43,19 @@ Scenario sets:
 - `placement_sweep`: load-proportional and weak-bus TCL placement sweeps
 - `comfort_sweep`: +/-0.5, +/-1.0, +/-2.0 C
 - `full`: combined sweep set
-- `monte_carlo`: randomized physical uncertainty, sensor noise, delay, feeder sag, and fleet-size samples
+- `monte_carlo`: limited stochastic diagnostic cases for noise, delay, compressor-time, sampled fleet size, and sag settings; with fixed NIST thermal calibration, this is not statistical Monte Carlo robustness evidence
 
 Paper summaries:
 
 ```powershell
 python summarize_experiments.py --experiment-dir experiments/full --experiment-dir experiments/monte_carlo --experiment-dir experiments/voltage_support_upgrade
+python paper/generate_paper_assets.py
+python scripts/sync_manuscript_assets.py
 ```
+
+The `monte_carlo` scenario-set name is a preserved command-line label. In the NIST-calibrated paper outputs, the current three generated cases are limited stochastic diagnostics, not an IID Monte Carlo robustness study.
+
+For EPSR, the authoritative manuscript tree is `submission_epsr/manuscript/`.
+The `paper/` tree is an intermediate generation workspace; final imported
+figures and tables are synchronized into the manuscript tree by
+`scripts/sync_manuscript_assets.py`.

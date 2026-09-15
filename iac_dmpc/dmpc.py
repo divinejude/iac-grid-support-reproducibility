@@ -1,4 +1,4 @@
-"""Decentralized MPC controller for active IAC power dispatch."""
+"""Fleet MPC controllers for aggregate IAC active/reactive dispatch."""
 
 from __future__ import annotations
 
@@ -24,7 +24,11 @@ class DMPCResult:
 
 
 class DMPCController:
-    """Quadratic DMPC for frequency support under strict thermal constraints."""
+    """Quadratic fleet MPC for frequency support under strict thermal constraints.
+
+    The class name is retained for backward compatibility with existing
+    experiment keys and saved data files.
+    """
 
     def __init__(
         self,
@@ -121,7 +125,11 @@ class DMPCController:
 
 
 class PQDMPCController(DMPCController):
-    """Convex P/Q DMPC with OpenDSS-derived voltage sensitivity."""
+    """Convex P/Q fleet MPC with OpenDSS-derived voltage sensitivity.
+
+    The class name is retained for backward compatibility with existing
+    experiment keys and saved data files.
+    """
 
     def solve_pq(
         self,

@@ -1,10 +1,10 @@
 # Modeling Assumptions For Journal-Grade Extensions
 
-This framework separates the nominal model used inside DMPC from the higher-fidelity simulation plant. That split is intentional: the controller should not be evaluated only on the exact model it optimizes.
+This framework separates the nominal model used inside the MPC from the higher-fidelity simulation plant. That split is intentional: the controller should not be evaluated only on the exact model it optimizes.
 
 ## OpenDSS Feeder And Frequency Model
 
-The main simulation plant uses the IEEE 13-node test feeder through an OpenDSS snapshot adapter in `iac_dmpc/feeder.py`. Each DMPC control interval edits the source-voltage magnitude, distributed feeder stress loads, and a distributed fleet of IAC load P/Q values, solves an OpenDSS power flow, and returns both fleet-weighted and worst bus-phase voltages.
+The main simulation plant uses the IEEE 13-node test feeder through an OpenDSS snapshot adapter in `iac_dmpc/feeder.py`. Each MPC control interval edits the source-voltage magnitude, distributed feeder stress loads, and a distributed fleet of IAC load P/Q values, solves an OpenDSS power flow, and returns both fleet-weighted and worst bus-phase voltages.
 
 The included benchmark files are in `examples/ieee13/`:
 
@@ -30,12 +30,12 @@ The adapter can also attach one `Load.Stress_<original_load>` at each original l
 
 ## P/Q MPC Voltage Sensitivity
 
-The full P/Q DMPC mode estimates local voltage sensitivity online from OpenDSS finite differences:
+The full P/Q MPC mode estimates local voltage sensitivity online from OpenDSS finite differences:
 
 - `dV/dP`: perturb aggregate TCL active power
 - `dV/dQ`: perturb aggregate TCL reactive support
 
-The optimizer uses this linearized voltage model over the MPC horizon while OpenDSS remains the nonlinear simulation plant. The full P/Q DMPC mode uses the worst bus-phase voltage for network-aware Volt-Var triggering and for the finite-difference sensitivity metric. This keeps the controller convex and makes the model mismatch explicit.
+The optimizer uses this linearized voltage model over the MPC horizon while OpenDSS remains the nonlinear simulation plant. The full P/Q MPC mode uses the worst bus-phase voltage for network-aware Volt-Var triggering and for the finite-difference sensitivity metric. This keeps the controller convex and makes the model mismatch explicit.
 
 Alternative studies can replace this allocation with AMI-derived household HVAC penetration, census-informed residential fractions, or Monte Carlo assignment across secondary service transformers.
 
@@ -49,21 +49,21 @@ At runtime the backend superposes each controller's aggregate IAC load-relief ch
 
 ## ANDES Nonlinear Transient-Stability Validation
 
-The script `validate_andes_transient.py` adds an offline nonlinear transmission validation layer using ANDES. It starts from the ANDES bundled IEEE 14-bus dynamic benchmark, which contains GENROU synchronous-machine models, TGOV1 governors, excitation systems, and BusFreq measurement blocks.
+The script `validate_andes_transient.py` adds an offline nonlinear transmission validation check using ANDES. It starts from the ANDES bundled IEEE 14-bus dynamic benchmark, which contains GENROU synchronous-machine models, TGOV1 governors, excitation systems, and BusFreq measurement blocks.
 
 The validation uses the same aggregate IAC active-power traces produced by the calibrated OpenDSS/IAC experiments:
 
 - no support;
-- active-only DMPC;
-- full P/Q DMPC.
+- active-only MPC;
+- full P/Q MPC.
 
 For each controller, the script creates a controller-specific Excel case and replaces the benchmark `Alter` sheet with timed TGOV1 auxiliary-power events. The active-power relief is converted from kW to per unit on a 100 MVA transmission base. A negative event represents the net under-frequency power imbalance, while positive IAC relief offsets part of that imbalance. ANDES then solves nonlinear time-domain simulation and the script extracts center-of-inertia frequency from the GENROU rotor-speed states.
 
 This validation is stronger than the replay trace because the machines, governors, exciters, and network algebraic equations are solved by ANDES. It is still an offline benchmark validation, not a fully time-synchronized transmission-and-distribution co-simulation in which OpenDSS and ANDES exchange states at every integration step.
 
-## Prototype T&D Dynamic Co-Simulation
+## Explicit T&D Dynamic Co-Simulation
 
-The script `validate_td_cosim.py` implements a first explicit T&D dynamic co-simulation prototype using the same ANDES IEEE 14-bus dynamic case and the OpenDSS IEEE 13-node feeder. The coupling loop is:
+The script `validate_td_cosim.py` implements an explicit T&D dynamic co-simulation check using the same ANDES IEEE 14-bus dynamic case and the OpenDSS IEEE 13-node feeder. The coupling loop is:
 
 - Advance ANDES in short nonlinear TDS segments.
 - Read the selected ANDES interface-bus voltage magnitude and angle.
@@ -71,7 +71,7 @@ The script `validate_td_cosim.py` implements a first explicit T&D dynamic co-sim
 - Solve OpenDSS with the current IAC P/Q trajectory and feeder stress loads.
 - Return the feeder boundary active-power change to ANDES through the TGOV1 auxiliary-power input.
 
-The default macro-step is 100 ms, with ANDES using 50 ms inner TDS steps. This is a loose explicit coupling prototype. It provides distribution voltage feedback at every macro-step and is useful for validation figures, but it is not yet a converged multi-rate co-simulation with rollback, Picard iterations, or formal coupling-error control.
+The default macro-step is 100 ms, with ANDES using 50 ms inner TDS steps. This is an explicit loose-coupling implementation. It provides distribution voltage feedback at every macro-step and is useful for validation figures, but it is not yet a converged multi-rate co-simulation with rollback, Picard iterations, or formal coupling-error control.
 
 ## Inverter Inner Loop
 
@@ -84,14 +84,14 @@ The inverter module represents dq current tracking as a first-order closed-loop 
 
 This is a reduced-order substitute for a switched or averaged inverter model. The validation scripts report the selected current-loop bandwidth and compare the grid-support command trajectory with the faster inner-loop dynamics.
 
-The script `validate_averaged_converter.py` now supplies that averaged converter validation. It uses the full P/Q DMPC command trajectory from the calibrated source-sag experiment and simulates a representative single-phase inverter at sub-millisecond resolution with:
+The script `validate_averaged_converter.py` now supplies that averaged converter validation. It uses the full P/Q MPC command trajectory from the calibrated source-sag experiment and simulates a representative single-phase inverter at sub-millisecond resolution with:
 
 - synchronous-reference-frame PLL dynamics;
 - dq PI current control with bandwidth matched to `InverterInnerLoopParameters`;
 - L-filter dynamics, grid-voltage cross-coupling, and PWM/computation delay;
 - DC-link capacitance and limited DC source current;
 - reactive-priority current limiting, voltage-command saturation, and anti-windup;
-- a fast 0.75 pu voltage notch and -0.35 Hz frequency pulse superimposed on the DMPC trajectory.
+- a fast 0.75 pu voltage notch and -0.35 Hz frequency pulse superimposed on the MPC trajectory.
 
 This validation reduces the earlier reduced-order inner-loop limitation by checking P/Q tracking, current, modulation, PLL, and DC-link behavior for the actual command trajectory. It is still an averaged model, so it does not replace hardware tests, switching-level EMT validation, semiconductor thermal checks, or protection validation.
 

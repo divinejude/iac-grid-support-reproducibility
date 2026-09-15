@@ -1,6 +1,6 @@
 """Averaged inverter validation for the IAC P/Q command trajectory.
 
-This script consumes the latest full P/Q DMPC experiment, expands the slow
+This script consumes the latest full P/Q MPC experiment, expands the slow
 controller commands into a sub-millisecond averaged converter simulation, and
 exports current-loop, P/Q tracking, PLL, current-limit, and DC-link metrics for
 the manuscript.
@@ -55,7 +55,7 @@ def require_trace_file(trace_path: Path) -> None:
     if trace_path.exists():
         return
     raise FileNotFoundError(
-        "\nMissing full P/Q DMPC trace for converter validation:\n"
+        "\nMissing full P/Q MPC trace for converter validation:\n"
         f"  {trace_path}\n\n"
         "The Mendeley research-data package should include this representative trace. "
         "If it is absent, regenerate it with:\n"
@@ -365,7 +365,7 @@ def write_latex_table(metrics: pd.DataFrame, path: Path) -> None:
     path.write_text(
         "\\begin{table}[!t]\n"
         "\\centering\n"
-        "\\caption{Averaged converter validation metrics for the full P/Q DMPC trajectory.}\n"
+        "\\caption{Averaged converter trackability-check metrics for the full P/Q MPC trajectory.}\n"
         "\\label{tab:converter_validation}\n"
         "\\begin{tabular}{lr}\n"
         "\\toprule\n"

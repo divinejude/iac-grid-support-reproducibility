@@ -2,7 +2,7 @@
 \centering
 \footnotesize
 \setlength{\tabcolsep}{3.5pt}
-\caption{Prototype explicit T\&D co-simulation with ANDES IEEE 14-bus and OpenDSS IEEE 13-node systems.}
+\caption{Explicit loose-coupled T\&D consistency check with ANDES IEEE 14-bus and OpenDSS IEEE 13-node systems.}
 \label{tab:td_cosim}
 \begin{tabular}{lrrrr}
 \toprule
@@ -10,8 +10,8 @@ Controller & Nadir & $V_{\min}$ & PCC V & Load \\
  & (Hz) & (pu) & (pu) & (kW) \\
 \midrule
 No support & 59.826 & 0.8988 & 0.9396 & 4628 \\
-DMPC-P & 59.904 & 0.9095 & 0.9449 & 3888 \\
-Full P/Q DMPC & 59.892 & 0.9185 & 0.9700 & 3889 \\
+MPC-P & 59.904 & 0.9095 & 0.9449 & 3888 \\
+Full P/Q MPC & 59.892 & 0.9185 & 0.9700 & 3889 \\
 \bottomrule
 \end{tabular}
 \end{table}

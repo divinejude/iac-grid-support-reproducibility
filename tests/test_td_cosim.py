@@ -5,7 +5,7 @@ import pandas as pd
 from validate_td_cosim import TDCosimConfig, compute_metrics, held_value
 
 
-class TDCosimPrototypeTests(unittest.TestCase):
+class TDCosimTests(unittest.TestCase):
     def test_held_value_uses_zero_order_hold(self):
         trace = pd.DataFrame({"time_s": [10.0, 20.0, 30.0], "p": [1.0, 2.0, 3.0]})
 

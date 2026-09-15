@@ -38,8 +38,8 @@ DEFAULT_PAPER_TABLE_DIR = ROOT / "paper" / "tables"
 CONTROLLERS = ("no_support", "dmpc_active_only", "dmpc_full_pq")
 CONTROLLER_LABELS = {
     "no_support": "No support",
-    "dmpc_active_only": "DMPC-P",
-    "dmpc_full_pq": "Full P/Q DMPC",
+    "dmpc_active_only": "MPC-P",
+    "dmpc_full_pq": "Full P/Q MPC",
 }
 
 
@@ -276,7 +276,7 @@ def write_latex_table(metrics: pd.DataFrame, path: Path) -> None:
         "\\centering\n"
         "\\footnotesize\n"
         "\\setlength{\\tabcolsep}{3.5pt}\n"
-        "\\caption{Nonlinear ANDES IEEE 14-bus transient-stability validation of active-power frequency support.}\n"
+        "\\caption{Nonlinear ANDES IEEE 14-bus transient-stability check of active-power frequency support.}\n"
         "\\label{tab:andes_validation}\n"
         "\\begin{tabular}{lrrrr}\n"
         "\\toprule\n"

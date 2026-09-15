@@ -236,6 +236,10 @@ def fit_measured_thermal_model(data: ThermalCalibrationData, initial: ThermalPar
     return calibrated, simulate_temperature(data, calibrated)
 
 
+def simulate_on_frame(frame: pd.DataFrame, thermal: ThermalParameters) -> np.ndarray:
+    return simulate_temperature(make_calibration_data(frame), thermal)
+
+
 def make_calibration_data(frame: pd.DataFrame) -> ThermalCalibrationData:
     time_s = (frame["timestamp"] - frame["timestamp"].iloc[0]).dt.total_seconds().to_numpy(dtype=float)
     return ThermalCalibrationData(
@@ -262,12 +266,77 @@ def compute_fit_metrics(frame: pd.DataFrame, predicted_c: np.ndarray, thermal: T
         "indoor_temperature_rmse_c": float(np.sqrt(np.mean(residual**2))),
         "indoor_temperature_mae_c": float(np.mean(np.abs(residual))),
         "active_cooling_rmse_c": float(np.sqrt(np.mean(residual[active] ** 2))) if np.any(active) else float("nan"),
+        "indoor_temperature_bias_c": float(np.mean(residual)),
+        "indoor_temperature_max_abs_error_c": float(np.max(np.abs(residual))),
         "sample_count": int(len(frame)),
         "active_cooling_sample_count": int(np.count_nonzero(active)),
         "mean_active_cooling_power_kw": float(np.mean(power[active])) if np.any(active) else 0.0,
         "median_effective_cop_active": float(np.median(cop[active])) if np.any(active) else float(thermal.cop),
         "mean_effective_cooling_capacity_kw": float(np.mean(cooling_capacity_kw[active])) if np.any(active) else 0.0,
     }
+
+
+def split_train_test(frame: pd.DataFrame, train_fraction: float = 0.7) -> tuple[pd.DataFrame, pd.DataFrame]:
+    split_index = int(np.floor(len(frame) * train_fraction))
+    split_index = min(max(split_index, 2), len(frame) - 2)
+    return frame.iloc[:split_index].copy(), frame.iloc[split_index:].copy()
+
+
+def holdout_validation(
+    fit_frame: pd.DataFrame, initial: ThermalParameters, train_fraction: float = 0.7
+) -> dict[str, object]:
+    train_frame, test_frame = split_train_test(fit_frame, train_fraction)
+    train_params, train_predicted = fit_measured_thermal_model(make_calibration_data(train_frame), initial)
+    test_predicted = simulate_on_frame(test_frame, train_params)
+    return {
+        "train_fraction": float(train_fraction),
+        "train_window": {
+            "start": str(train_frame["timestamp"].iloc[0]),
+            "end": str(train_frame["timestamp"].iloc[-1]),
+            "samples": int(len(train_frame)),
+        },
+        "test_window": {
+            "start": str(test_frame["timestamp"].iloc[0]),
+            "end": str(test_frame["timestamp"].iloc[-1]),
+            "samples": int(len(test_frame)),
+        },
+        "thermal_parameters_from_train": asdict(train_params),
+        "train_fit_quality": compute_fit_metrics(train_frame, train_predicted, train_params),
+        "test_fit_quality": compute_fit_metrics(test_frame, test_predicted, train_params),
+    }
+
+
+def local_parameter_sensitivity(
+    frame: pd.DataFrame, thermal: ThermalParameters, perturbation_fraction: float = 0.1
+) -> list[dict[str, float | str]]:
+    baseline_predicted = simulate_on_frame(frame, thermal)
+    baseline_rmse = compute_fit_metrics(frame, baseline_predicted, thermal)["indoor_temperature_rmse_c"]
+    rows: list[dict[str, float | str]] = []
+    parameters = [
+        ("$R_{th}$", "resistance_c_per_kw"),
+        ("$C_{th}$", "capacitance_kwh_per_c"),
+        ("COP", "cop"),
+        ("COP slope", "cop_temperature_slope_per_c"),
+        ("Internal gain", "internal_gain_kw"),
+    ]
+    for label, field in parameters:
+        values: dict[str, float | str] = {
+            "parameter": label,
+            "baseline_rmse_c": float(baseline_rmse),
+        }
+        for direction, multiplier in (("minus", 1.0 - perturbation_fraction), ("plus", 1.0 + perturbation_fraction)):
+            value = float(getattr(thermal, field))
+            if field == "cop_temperature_slope_per_c":
+                perturbed_value = value + (multiplier - 1.0) * max(abs(value), 0.01)
+            else:
+                perturbed_value = value * multiplier
+            perturbed = replace(thermal, **{field: perturbed_value})
+            predicted = simulate_on_frame(frame, perturbed)
+            rmse = compute_fit_metrics(frame, predicted, perturbed)["indoor_temperature_rmse_c"]
+            values[f"{direction}_10pct_rmse_c"] = float(rmse)
+            values[f"{direction}_10pct_delta_rmse_c"] = float(rmse - baseline_rmse)
+        rows.append(values)
+    return rows
 
 
 def plot_calibration(frame: pd.DataFrame, predicted_c: np.ndarray, thermal: ThermalParameters, path: Path) -> None:
@@ -311,6 +380,30 @@ def plot_calibration(frame: pd.DataFrame, predicted_c: np.ndarray, thermal: Ther
     plt.close(fig)
 
 
+def plot_residual_diagnostics(frame: pd.DataFrame, predicted_c: np.ndarray, path: Path) -> None:
+    apply_elsevier_figure_style(base_size=8.0)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    time_days = (frame["timestamp"] - frame["timestamp"].iloc[0]).dt.total_seconds() / 86400.0
+    residual = predicted_c - frame["indoor_c"].to_numpy(dtype=float)
+    active = frame["cooling_electric_kw"].to_numpy(dtype=float) > 0.1
+
+    fig, axes = plt.subplots(2, 1, figsize=(9, 5.2))
+    axes[0].plot(time_days, residual, linewidth=0.8, label="Residual")
+    axes[0].axhline(0.0, color="black", linewidth=0.8)
+    axes[0].scatter(time_days[active], residual[active], s=4, alpha=0.35, label="Cooling samples")
+    axes[0].set_ylabel("Pred.-meas. (deg C)")
+    axes[0].legend(loc="best")
+
+    axes[1].hist(residual, bins=45, alpha=0.85)
+    axes[1].axvline(0.0, color="black", linewidth=0.8)
+    axes[1].set_xlabel("Pred.-meas. residual (deg C)")
+    axes[1].set_ylabel("Count")
+
+    fig.tight_layout()
+    fig.savefig(path, dpi=180)
+    plt.close(fig)
+
+
 def write_latex_table(payload: dict[str, object], path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     fit = payload["fit_quality"]
@@ -328,6 +421,7 @@ def write_latex_table(payload: dict[str, object], path: Path) -> None:
         f"Fit window & {payload['fit_window']['start'][:10]}--{payload['fit_window']['end'][:10]} \\\\",
         f"Samples / cooling samples & {fit['sample_count']} / {fit['active_cooling_sample_count']} \\\\",
         f"Indoor-temperature RMSE & {fit['indoor_temperature_rmse_c']:.3f} $^\\circ$C \\\\",
+        f"Mean bias / max error & {fit['indoor_temperature_bias_c']:.3f} / {fit['indoor_temperature_max_abs_error_c']:.3f} $^\\circ$C \\\\",
         f"Active-cooling RMSE & {fit['active_cooling_rmse_c']:.3f} $^\\circ$C \\\\",
         f"$R_{{th}}$, $C_{{th}}$ & {thermal['resistance_c_per_kw']:.3f} $^\\circ$C/kW, {thermal['capacitance_kwh_per_c']:.1f} kWh/$^\\circ$C \\\\",
         f"COP and lift slope & {thermal['cop']:.3f}, {thermal['cop_temperature_slope_per_c']:.4f} per $^\\circ$C \\\\",
@@ -335,6 +429,42 @@ def write_latex_table(payload: dict[str, object], path: Path) -> None:
         "\\end{tabular}",
         "\\end{table}",
     ]
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def write_validation_table(payload: dict[str, object], path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    holdout = payload["holdout_validation"]
+    train = holdout["train_fit_quality"]
+    test = holdout["test_fit_quality"]
+    sensitivity = payload["local_sensitivity"]
+    lines = [
+        "\\begin{table}[!t]",
+        "\\caption{NIST NZERTF holdout validation and local parameter sensitivity}",
+        "\\label{tab:nist_validation}",
+        "\\centering",
+        "\\begin{tabular}{lcc}",
+        "\\toprule",
+        "Diagnostic & Train / baseline & Test or $+10\\%$ \\\\",
+        "\\midrule",
+        f"Samples & {train['sample_count']} & {test['sample_count']} \\\\",
+        f"Indoor RMSE ($^\\circ$C) & {train['indoor_temperature_rmse_c']:.3f} & {test['indoor_temperature_rmse_c']:.3f} \\\\",
+        f"Indoor MAE ($^\\circ$C) & {train['indoor_temperature_mae_c']:.3f} & {test['indoor_temperature_mae_c']:.3f} \\\\",
+        f"Bias ($^\\circ$C) & {train['indoor_temperature_bias_c']:.3f} & {test['indoor_temperature_bias_c']:.3f} \\\\",
+        "\\midrule",
+    ]
+    for row in sensitivity:
+        lines.append(
+            f"{row['parameter']} RMSE change ($^\\circ$C) & "
+            f"{row['minus_10pct_delta_rmse_c']:.3f} & {row['plus_10pct_delta_rmse_c']:.3f} \\\\"
+        )
+    lines.extend(
+        [
+            "\\bottomrule",
+            "\\end{tabular}",
+            "\\end{table}",
+        ]
+    )
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
@@ -361,6 +491,8 @@ def calibrate(args: argparse.Namespace) -> dict[str, object]:
         setpoint_c=setpoint_c,
     )
     metrics = compute_fit_metrics(fit_frame, predicted_c, thermal)
+    holdout = holdout_validation(fit_frame, initial)
+    sensitivity = local_parameter_sensitivity(fit_frame, thermal)
 
     power = fit_frame["cooling_electric_kw"].to_numpy(dtype=float)
     cop = effective_cop(
@@ -412,6 +544,8 @@ def calibrate(args: argparse.Namespace) -> dict[str, object]:
             "window_days": int(args.fit_window_days),
         },
         "fit_quality": metrics,
+        "holdout_validation": holdout,
+        "local_sensitivity": sensitivity,
         "thermal_parameters": asdict(thermal),
         "notes": [
             "NIST HVAC supply and return air temperatures are used only to classify cooling operation.",
@@ -423,15 +557,20 @@ def calibrate(args: argparse.Namespace) -> dict[str, object]:
     json_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
     plot_path = args.output_dir / "nist_nzertf_calibration_fit.png"
     plot_calibration(fit_frame, predicted_c, thermal, plot_path)
+    residual_plot_path = args.output_dir / "nist_nzertf_residual_diagnostics.png"
+    plot_residual_diagnostics(fit_frame, predicted_c, residual_plot_path)
     write_latex_table(payload, PROJECT_ROOT / "paper" / "tables" / "nist_calibration.tex")
+    write_validation_table(payload, PROJECT_ROOT / "paper" / "tables" / "nist_validation.tex")
     paper_fig = PROJECT_ROOT / "paper" / "figures" / "nist_nzertf_calibration_fit.png"
     paper_fig.parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(plot_path, paper_fig)
+    shutil.copyfile(residual_plot_path, PROJECT_ROOT / "paper" / "figures" / "nist_nzertf_residual_diagnostics.png")
 
     print(json.dumps(payload["thermal_parameters"], indent=2))
     print(f"Wrote {json_path}")
     print(f"Wrote {csv_path}")
     print(f"Wrote {plot_path}")
+    print(f"Wrote {residual_plot_path}")
     return payload
 
 

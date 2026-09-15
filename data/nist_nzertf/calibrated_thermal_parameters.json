@@ -21,12 +21,103 @@
     "indoor_temperature_rmse_c": 0.11428946527403042,
     "indoor_temperature_mae_c": 0.07708948109167306,
     "active_cooling_rmse_c": 0.12961635177213254,
+    "indoor_temperature_bias_c": 0.001336010784356219,
+    "indoor_temperature_max_abs_error_c": 0.6643643378537192,
     "sample_count": 20133,
     "active_cooling_sample_count": 13286,
     "mean_active_cooling_power_kw": 1.2137958602288121,
     "median_effective_cop_active": 1.4787212636005087,
     "mean_effective_cooling_capacity_kw": 1.7716571415799542
   },
+  "holdout_validation": {
+    "train_fraction": 0.7,
+    "train_window": {
+      "start": "2015-07-19 00:00:42",
+      "end": "2015-07-28 19:11:27",
+      "samples": 14093
+    },
+    "test_window": {
+      "start": "2015-07-28 19:12:27",
+      "end": "2015-08-01 23:59:56",
+      "samples": 6040
+    },
+    "thermal_parameters_from_train": {
+      "ambient_temperature_c": 26.242891553525887,
+      "setpoint_c": 23.421689690233784,
+      "comfort_band_c": 1.0,
+      "resistance_c_per_kw": 13.6176526922159,
+      "capacitance_kwh_per_c": 79.99943547214939,
+      "cop": 1.2933500717413275,
+      "cop_temperature_slope_per_c": -0.026303776955468473,
+      "internal_gain_kw": 0.8097903068470498
+    },
+    "train_fit_quality": {
+      "indoor_temperature_rmse_c": 0.11535722689811209,
+      "indoor_temperature_mae_c": 0.07785806673207996,
+      "active_cooling_rmse_c": 0.13200220431316723,
+      "indoor_temperature_bias_c": -0.0015708893994550589,
+      "indoor_temperature_max_abs_error_c": 0.6630803131094645,
+      "sample_count": 14093,
+      "active_cooling_sample_count": 9131,
+      "mean_active_cooling_power_kw": 1.219245897820611,
+      "median_effective_cop_active": 1.2534047226178606,
+      "mean_effective_cooling_capacity_kw": 1.5052399219074173
+    },
+    "test_fit_quality": {
+      "indoor_temperature_rmse_c": 0.1733088816999737,
+      "indoor_temperature_mae_c": 0.14171950590326166,
+      "active_cooling_rmse_c": 0.18775143219912893,
+      "indoor_temperature_bias_c": -0.13488401439174283,
+      "indoor_temperature_max_abs_error_c": 0.6783333303381447,
+      "sample_count": 6040,
+      "active_cooling_sample_count": 4155,
+      "mean_active_cooling_power_kw": 1.2018188943441634,
+      "median_effective_cop_active": 1.2413786430220815,
+      "mean_effective_cooling_capacity_kw": 1.4900606533585745
+    }
+  },
+  "local_sensitivity": [
+    {
+      "parameter": "$R_{th}$",
+      "baseline_rmse_c": 0.11428946527403042,
+      "minus_10pct_rmse_c": 0.1286913310740546,
+      "minus_10pct_delta_rmse_c": 0.014401865800024172,
+      "plus_10pct_rmse_c": 0.11947682922905944,
+      "plus_10pct_delta_rmse_c": 0.0051873639550290285
+    },
+    {
+      "parameter": "$C_{th}$",
+      "baseline_rmse_c": 0.11428946527403042,
+      "minus_10pct_rmse_c": 0.1148236845073257,
+      "minus_10pct_delta_rmse_c": 0.0005342192332952883,
+      "plus_10pct_rmse_c": 0.11401154828082927,
+      "plus_10pct_delta_rmse_c": -0.0002779169932011494
+    },
+    {
+      "parameter": "COP",
+      "baseline_rmse_c": 0.11428946527403042,
+      "minus_10pct_rmse_c": 0.27063096123582125,
+      "minus_10pct_delta_rmse_c": 0.15634149596179084,
+      "plus_10pct_rmse_c": 0.25397755292018825,
+      "plus_10pct_delta_rmse_c": 0.13968808764615784
+    },
+    {
+      "parameter": "COP slope",
+      "baseline_rmse_c": 0.11428946527403042,
+      "minus_10pct_rmse_c": 0.11592218326031492,
+      "minus_10pct_delta_rmse_c": 0.0016327179862845043,
+      "plus_10pct_rmse_c": 0.11414504291113418,
+      "plus_10pct_delta_rmse_c": -0.00014442236289623211
+    },
+    {
+      "parameter": "Internal gain",
+      "baseline_rmse_c": 0.11428946527403042,
+      "minus_10pct_rmse_c": 0.21693714811317147,
+      "minus_10pct_delta_rmse_c": 0.10264768283914105,
+      "plus_10pct_rmse_c": 0.23141475868384723,
+      "plus_10pct_delta_rmse_c": 0.11712529340981681
+    }
+  ],
   "thermal_parameters": {
     "ambient_temperature_c": 26.242891553525887,
     "setpoint_c": 23.421689690233784,

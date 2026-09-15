@@ -518,7 +518,7 @@ def save_outputs(
     axes[0].set_ylabel("Hz")
     axes[0].legend(loc="best")
 
-    axes[1].plot(time_min, log["p_command_kw"], label="DMPC active command")
+    axes[1].plot(time_min, log["p_command_kw"], label="MPC active command")
     axes[1].plot(time_min, log["p_feasible_kw"], label="Ramp/speed feasible P")
     axes[1].plot(time_min, log["p_actual_kw"], label="Compressor active power", linestyle="--")
     axes[1].plot(time_min, log["q_actual_kvar"], label="Reactive power")

@@ -1,6 +1,6 @@
 EPSR reproducibility and research-data package
 
-This archive contains the code, OpenDSS feeder files, validation scripts,
+This archive contains the code, OpenDSS feeder files, validation/check scripts,
 derived calibration outputs, experiment summaries, manuscript figures/tables,
 representative full-suite traces used by the default validation scripts, and
 execution metadata needed to reproduce the reported simulations.
@@ -8,16 +8,17 @@ execution metadata needed to reproduce the reported simulations.
 Included material:
 
 - iac_dmpc/: Python package for the IAC plant, inverter constraints, feeder
-  approximation, DMPC controller, signal processing, metrics, and plotting.
+  approximation, network-aware fleet MPC controller, signal processing,
+  metrics, and plotting.
 - examples/: OpenDSS IEEE 13-node feeder files and example feeder models.
 - tests/: regression tests for calibration, feeder/co-simulation, converter
-  validation, transient-stability validation, and physical model checks.
+  trackability checks, transient-stability checks, and physical model checks.
 - run_experiment_suite.py: deterministic and uncertainty experiment runner.
 - summarize_experiments.py: summary-table and figure aggregation script.
 - calibrate_from_nist_nzertf.py: measured-data thermal calibration workflow.
 - calibrate_from_resstock.py: ResStock/EnergyPlus calibration workflow.
 - validate_*.py: ANDES, T&D co-simulation, averaged-converter, and
-  switching-level inverter validation scripts.
+  switching-level inverter validation/check scripts.
 - data/: lightweight derived calibration parameters, processed calibration
   time series, and dynamic replay traces.
 - paper_outputs*/: generated result CSV summaries and diagnostic figures.
@@ -56,11 +57,26 @@ Typical reproduction workflow:
    python run_experiment_suite.py --scenario-set full --thermal-calibration-json data/nist_nzertf/calibrated_thermal_parameters.json --output-dir experiments/nist_measured_calibrated
    python run_experiment_suite.py --scenario-set monte_carlo --thermal-calibration-json data/nist_nzertf/calibrated_thermal_parameters.json --output-dir experiments/nist_measured_calibrated
 
+   The scenario-set name monte_carlo is retained for command-line
+   reproducibility. The bundled three-case NIST-calibrated output is a limited
+   stochastic diagnostic for noise, delay, compressor-time, sampled fleet size,
+   and sag settings, not statistical Monte Carlo robustness evidence.
+
 6. Summarize experiments:
    python summarize_experiments.py --experiment-dir experiments/nist_measured_calibrated/full --experiment-dir experiments/nist_measured_calibrated/monte_carlo --output-dir paper_outputs_nist_measured_calibrated
 
 7. Regenerate manuscript assets:
    python paper/generate_paper_assets.py
+   python scripts/sync_manuscript_assets.py
+
+   The authoritative EPSR manuscript tree is submission_epsr/manuscript/ in
+   the working repository. The paper/ directory is an intermediate
+   figure/table generation workspace; final imported figures and tables are
+   synchronized into the authoritative manuscript tree with hash verification
+   by scripts/sync_manuscript_assets.py.
+
+8. Run local package preflight before upload or mirror refresh:
+   python scripts/package_preflight.py
 
 On some Windows/OpenDSS installations, opendssdirect may print a backend
 shutdown stack trace after pytest has already reported success. The run is

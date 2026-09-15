@@ -1,13 +1,13 @@
-"""Prototype iterative T&D dynamic co-simulation using ANDES and OpenDSS.
+"""Explicit loose-coupled T&D dynamic co-simulation check using ANDES and OpenDSS.
 
-The prototype advances the ANDES IEEE 14-bus nonlinear transient simulation in
+The check advances the ANDES IEEE 14-bus nonlinear transient simulation in
 short macro-steps. At every coupling step, the current ANDES boundary-bus
 voltage is sent to the OpenDSS IEEE 13-node feeder; OpenDSS solves the
 distribution boundary load with the IAC P/Q trajectory; the resulting feeder
 active-power change is returned to ANDES as TGOV1 auxiliary active-power input.
 
 This is explicit loose coupling. It is intended as a reproducible validation
-prototype, not a production-grade T&D co-simulation engine.
+check, not a production-grade T&D co-simulation engine.
 """
 
 from __future__ import annotations
@@ -237,7 +237,7 @@ def write_latex_table(metrics: pd.DataFrame, path: Path) -> None:
         "\\centering\n"
         "\\footnotesize\n"
         "\\setlength{\\tabcolsep}{3.5pt}\n"
-        "\\caption{Prototype explicit T\\&D co-simulation with ANDES IEEE 14-bus and OpenDSS IEEE 13-node systems.}\n"
+        "\\caption{Explicit loose-coupled T\\&D consistency check with ANDES IEEE 14-bus and OpenDSS IEEE 13-node systems.}\n"
         "\\label{tab:td_cosim}\n"
         "\\begin{tabular}{lrrrr}\n"
         "\\toprule\n"
@@ -285,7 +285,7 @@ def run_cosim(args: argparse.Namespace) -> None:
     shutil.copy2(figure_path.with_suffix(".pdf"), paper_figure_dir / "td_cosim_response.pdf")
     shutil.copy2(table_path, paper_table_dir / "td_cosim.tex")
     print(metrics.to_string(index=False), flush=True)
-    print(f"Wrote prototype T&D co-simulation results to {output_dir}", flush=True)
+    print(f"Wrote explicit loose-coupled T&D co-simulation results to {output_dir}", flush=True)
 
 
 def parse_args() -> argparse.Namespace:

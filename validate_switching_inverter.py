@@ -2,7 +2,7 @@
 
 The OpenDSS feeder model is intentionally quasi-static. This script adds a
 separate fast-timescale validation layer for one representative IAC converter
-connected to a Thevenin-equivalent feeder bus. The full P/Q DMPC command trace
+connected to a Thevenin-equivalent feeder bus. The full P/Q MPC command trace
 is held as the slow reference, while the converter is simulated with explicit
 bipolar full-bridge PWM, PLL dynamics, dq current PI control, an L-filter plus
 Thevenin impedance, DC-link dynamics, current limiting, P/Q priority, and
@@ -310,13 +310,13 @@ def write_latex_table(metrics: pd.DataFrame, path: Path) -> None:
     path.write_text(
         "\\begin{table}[!t]\n"
         "\\centering\n"
-        "\\caption{Switching-level inverter validation metrics for the full P/Q DMPC trajectory.}\n"
+        "\\caption{Switching-level inverter trackability-check metrics for the full P/Q MPC trajectory.}\n"
         "\\label{tab:switching_inverter_validation}\n"
         "\\begin{tabular}{lr}\n"
         "\\toprule\n"
         "Metric & Value \\\\\n"
         "\\midrule\n"
-        f"EMT step & {row['step_us']:.1f} $\\mu$s \\\\\n"
+        f"Switching step & {row['step_us']:.1f} $\\mu$s \\\\\n"
         f"PWM switching frequency & {row['switching_frequency_khz']:.1f} kHz \\\\\n"
         f"RMS $P$ tracking error & {row['rms_p_error_kw']:.3f} kW \\\\\n"
         f"RMS $Q$ tracking error & {row['rms_q_error_kvar']:.3f} kvar \\\\\n"

@@ -40,9 +40,9 @@ CONTROLLERS = ["no_support", "rule_based", "dmpc_active_only", "dmpc_pq", "dmpc_
 LABELS = {
     "no_support": "No support",
     "rule_based": "Rule based",
-    "dmpc_active_only": "DMPC-P",
-    "dmpc_pq": "DMPC-P+VV",
-    "dmpc_full_pq": "Full P/Q DMPC",
+    "dmpc_active_only": "MPC-P",
+    "dmpc_pq": "MPC-P+VV",
+    "dmpc_full_pq": "Full P/Q MPC",
 }
 COLORS = {
     "no_support": "#4d4d4d",
@@ -98,7 +98,7 @@ def plot_architecture() -> None:
         "meas": (0.04, 0.58, 0.16, 0.20, "Grid\nmeasurements"),
         "pll": (0.25, 0.58, 0.16, 0.20, "SOGI-PLL"),
         "dq": (0.46, 0.58, 0.16, 0.20, "P/Q\ncurrent split"),
-        "ctrl": (0.67, 0.58, 0.18, 0.20, "Rule-based /\nDMPC control"),
+        "ctrl": (0.67, 0.58, 0.18, 0.20, "Rule-based /\nfleet MPC"),
         "feeder": (0.67, 0.17, 0.18, 0.20, "OpenDSS\nIEEE 13 feeder"),
         "thermal": (0.46, 0.17, 0.16, 0.20, "Thermal /\ncompressor state"),
     }
@@ -155,7 +155,7 @@ def plot_time_response(scenario: str, name: str, title: str) -> None:
     axes[0].set_ylabel("Frequency (Hz)")
     axes[1].set_ylabel("Worst V (pu)")
     axes[2].set_ylabel("Temp. (deg C)")
-    axes[3].set_ylabel("Fleet P/Q")
+    axes[3].set_ylabel("Fleet P/Q (kW/kvar)")
     axes[3].set_xlabel("Time (min)")
     axes[0].set_title(title)
     axes[0].legend(ncol=3, loc="lower right")
@@ -296,8 +296,8 @@ def make_parameter_table() -> None:
         "Quantity & Symbol & Value \\\\",
         "\\midrule",
         "Nominal frequency & $f_0$ & 60 Hz \\\\",
-        "DMPC sample time & $T_s$ & 5 s \\\\",
-        "DMPC horizon & $M$ & 12 steps \\\\",
+        "MPC sample time & $T_s$ & 5 s \\\\",
+        "MPC horizon & $M$ & 12 steps \\\\",
         "IAC set power & $P_{set}$ & 2.0 kW/unit \\\\",
         "Compressor range & $P_{min},P_{max}$ & 0.6, 3.5 kW \\\\",
         "Inverter rating & $S_{rated}$ & 4.0 kVA/unit \\\\",
@@ -378,7 +378,7 @@ def make_opf_comparison_table() -> None:
     rows = read_rows(path)
     lines = [
         "\\begin{table}[!t]",
-        "\\caption{Sensitivity OPF prediction versus OpenDSS power-flow validation}",
+        "\\caption{Sensitivity OPF prediction versus OpenDSS power-flow check}",
         "\\label{tab:opf_comparison}",
         "\\centering",
         "\\begin{tabular}{lccc}",
