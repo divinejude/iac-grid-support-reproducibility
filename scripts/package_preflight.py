@@ -210,7 +210,7 @@ def main() -> None:
         "--mendeley-zip",
         default=str(ROOT / "submission_epsr" / "mendeley_data" / "research_data_EPSR_reproducibility.zip"),
     )
-    parser.add_argument("--report", default=str(REPORT_DIR / "package_preflight_report_A.md"))
+    parser.add_argument("--report", default=str(REPORT_DIR / "package_preflight_report.md"))
     args = parser.parse_args()
 
     if args.public_package:

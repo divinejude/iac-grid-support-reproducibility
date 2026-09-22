@@ -42,5 +42,5 @@ def test_documented_public_preflight_passes_from_fresh_extraction(tmp_path):
     assert result.returncode == 0, result.stdout + result.stderr
     assert "Package preflight PASS" in result.stdout
     assert "submission_epsr" not in result.stdout
-    report = package / "package_preflight_reports" / "package_preflight_report_A.md"
+    report = package / "package_preflight_reports" / "package_preflight_report.md"
     assert "Overall status: PASS" in report.read_text(encoding="utf-8")
