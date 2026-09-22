@@ -1,4 +1,4 @@
-"""Averaged inverter validation for the IAC P/Q command trajectory.
+"""Averaged inverter trackability check for the IAC P/Q command trajectory.
 
 This script consumes the latest full P/Q MPC experiment, expands the slow
 controller commands into a sub-millisecond averaged converter simulation, and

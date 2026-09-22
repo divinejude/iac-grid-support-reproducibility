@@ -28,7 +28,7 @@ This repository contains a modular Python framework for an inverter-based air co
 pip install -r requirements.txt
 ```
 
-For the optional nonlinear transient-stability validation:
+For the optional nonlinear transient-stability check:
 
 ```powershell
 pip install -r requirements-validation.txt
@@ -151,14 +151,16 @@ python run_experiment_suite.py --scenario-set monte_carlo --thermal-calibration-
 python summarize_experiments.py --experiment-dir experiments/nist_measured_calibrated/full --experiment-dir experiments/nist_measured_calibrated/monte_carlo --output-dir paper_outputs_nist_measured_calibrated
 python summarize_experiments.py --experiment-dir experiments/dynamic_replay_calibrated/full --experiment-dir experiments/dynamic_replay_calibrated/monte_carlo --output-dir paper_outputs_dynamic_replay_calibrated
 python paper/generate_paper_assets.py
-python scripts/sync_manuscript_assets.py
 ```
 
-The authoritative EPSR manuscript tree is `submission_epsr/manuscript/`.
-The `paper/` directory is an intermediate generation workspace; final
-manuscript-facing figures and tables are synchronized into
-`submission_epsr/manuscript/figures/` and `submission_epsr/manuscript/tables/`
-with hash verification by `scripts/sync_manuscript_assets.py`.
+The public-package figures and tables are written under `paper/`.
+
+Inspect or regenerate the frozen shared-headroom mechanism summary from the
+bundled trajectories:
+
+```powershell
+python analyze_headroom_tradeoff.py
+```
 
 The default `monte_carlo` suite name is retained for command-line reproducibility, but the bundled three-case NIST-calibrated output should be read as a limited stochastic diagnostic rather than a statistical robustness study.
 
@@ -170,15 +172,21 @@ python -m pytest tests
 
 On some Windows/OpenDSS installations, `opendssdirect` may print a backend shutdown stack trace after the tests have already reported success. The run is considered successful when pytest reports all tests passed and returns exit code 0.
 
-Before uploading local EPSR submission or public reproducibility artifacts, run:
+From the root of an extracted public reproducibility package, run:
 
 ```powershell
-python scripts/package_preflight.py
+python scripts/package_preflight.py --public-package .
 ```
 
 The preflight checks required files, public DOI/GitHub references, stale
 controller terminology, internal coordination files, caches, build logs, and
 absolute local paths.
+
+The manuscript assembly tree, submission packaging scripts, and manuscript
+asset-synchronization utility are authoring-only and intentionally excluded
+from this public package. They are not required for the public reproduction
+workflow. Maintainers working in the complete author workspace can omit
+`--public-package` to run the broader submission-and-public-artifact preflight.
 
 Compare the OpenDSS sensitivity approximation with a convex voltage-support OPF:
 
@@ -186,7 +194,7 @@ Compare the OpenDSS sensitivity approximation with a convex voltage-support OPF:
 python compare_opf_sensitivity.py
 ```
 
-Run nonlinear transient-stability validation with ANDES:
+Run the nonlinear transient-stability frequency check with ANDES:
 
 ```powershell
 python validate_andes_transient.py
@@ -212,7 +220,7 @@ This advances the ANDES IEEE 14-bus dynamic case in short TDS segments, sends th
 - `paper/figures/td_cosim_response.pdf`
 - `paper/tables/td_cosim.tex`
 
-Run averaged inverter/converter validation:
+Run the averaged inverter/converter trackability check:
 
 ```powershell
 python validate_averaged_converter.py
@@ -225,10 +233,10 @@ This consumes the latest full P/Q MPC source-sag trajectory, simulates an averag
 - `paper/figures/averaged_converter_validation.pdf`
 - `paper/tables/averaged_converter_validation.tex`
 
-Run switching-level inverter validation:
+Run the switching-level inverter trackability check:
 
 ```powershell
 python validate_switching_inverter.py
 ```
 
-The validation commands above use the bundled representative `voltage_sag_0.92` full P/Q trace by default. If those traces have been moved or removed, either regenerate the full experiment suite or pass an explicit quick-suite trace with `--trace`.
+The check commands above use the bundled representative `voltage_sag_0.92` full P/Q trace by default. If those traces have been moved or removed, either regenerate the full experiment suite or pass an explicit quick-suite trace with `--trace`.

@@ -11,12 +11,14 @@ SCRIPT = ROOT / "scripts" / "package_preflight.py"
 PUBLIC_REQUIRED = [
     "README.md",
     "README_RESEARCH_DATA_EPSR.txt",
+    "REVIEWER_ACCESS.md",
+    "docs/experiment_suite.md",
     "requirements.txt",
     "requirements-validation.txt",
     "run_experiment_suite.py",
     "summarize_experiments.py",
     "paper/generate_paper_assets.py",
-    "scripts/sync_manuscript_assets.py",
+    "scripts/package_preflight.py",
 ]
 
 SUBMISSION_REQUIRED = [

@@ -45,17 +45,27 @@ Scenario sets:
 - `full`: combined sweep set
 - `monte_carlo`: limited stochastic diagnostic cases for noise, delay, compressor-time, sampled fleet size, and sag settings; with fixed NIST thermal calibration, this is not statistical Monte Carlo robustness evidence
 
-Paper summaries:
+Public-package summaries:
 
 ```powershell
-python summarize_experiments.py --experiment-dir experiments/full --experiment-dir experiments/monte_carlo --experiment-dir experiments/voltage_support_upgrade
+python summarize_experiments.py --experiment-dir experiments/nist_measured_calibrated/full --output-dir paper_outputs_reviewer
 python paper/generate_paper_assets.py
-python scripts/sync_manuscript_assets.py
 ```
 
 The `monte_carlo` scenario-set name is a preserved command-line label. In the NIST-calibrated paper outputs, the current three generated cases are limited stochastic diagnostics, not an IID Monte Carlo robustness study.
 
-For EPSR, the authoritative manuscript tree is `submission_epsr/manuscript/`.
-The `paper/` tree is an intermediate generation workspace; final imported
-figures and tables are synchronized into the manuscript tree by
-`scripts/sync_manuscript_assets.py`.
+The public archive includes frozen/precomputed results and representative
+source trajectories under `experiments/`, together with public figures and
+tables under `paper/`. Complete scenario folders can be regenerated with the
+experiment runner and may be computationally expensive because they solve
+repeated MPC and OpenDSS power-flow problems.
+
+Manuscript assembly and asset synchronization are authoring-only workflows.
+Their scripts and submission trees are intentionally excluded because they are
+not required to inspect or reproduce the public computational results.
+
+From the extracted archive root, audit the public package with:
+
+```powershell
+python scripts/package_preflight.py --public-package .
+```

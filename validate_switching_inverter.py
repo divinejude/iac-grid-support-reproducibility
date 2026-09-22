@@ -1,4 +1,4 @@
-"""Switching-level inverter validation for the IAC P/Q command trajectory.
+"""Switching-level inverter trackability check for the IAC P/Q command trajectory.
 
 The OpenDSS feeder model is intentionally quasi-static. This script adds a
 separate fast-timescale validation layer for one representative IAC converter

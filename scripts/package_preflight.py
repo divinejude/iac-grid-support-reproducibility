@@ -10,7 +10,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-REPORT_DIR = ROOT / "iac_paper_research_management" / "stage_05_reproducibility"
+REPORT_DIR = ROOT / "package_preflight_reports"
 
 FORBIDDEN_PATH_PARTS = [
     "iac_paper_research_management",
@@ -31,6 +31,14 @@ FORBIDDEN_PATH_PARTS = [
 ALWAYS_FORBIDDEN_TEXT_PATTERNS = [
     (re.compile(r"C:\\Users\\Divine", re.IGNORECASE), "absolute local path"),
 ]
+
+OBSOLETE_DATASET_VERSION_PATTERNS = [
+    (re.compile(r"10\.17632/kdbtxv66n9\.[34]", re.IGNORECASE), "version-specific obsolete dataset DOI"),
+    (re.compile(r"/kdbtxv66n9\.[34]", re.IGNORECASE), "version-specific obsolete dataset path"),
+    (re.compile(r"\bV[34]\b|Version\s+[34]", re.IGNORECASE), "obsolete dataset version reference"),
+]
+
+NESTED_ARCHIVE_SUFFIXES = {".zip", ".7z", ".rar", ".tar", ".gz"}
 
 PUBLIC_CLAIM_TEXT_PATTERNS = [
     (re.compile(r"identical public GitHub mirror", re.IGNORECASE), "unsafe identical GitHub mirror claim"),
@@ -80,12 +88,14 @@ SCANNER_RULE_FILES = {"scripts/package_preflight.py", "package_preflight.py"}
 REQUIRED_PUBLIC_FILES = [
     "README.md",
     "README_RESEARCH_DATA_EPSR.txt",
+    "REVIEWER_ACCESS.md",
+    "docs/experiment_suite.md",
     "requirements.txt",
     "requirements-validation.txt",
     "run_experiment_suite.py",
     "summarize_experiments.py",
     "paper/generate_paper_assets.py",
-    "scripts/sync_manuscript_assets.py",
+    "scripts/package_preflight.py",
 ]
 
 REQUIRED_SUBMISSION_FILES = [
@@ -138,8 +148,20 @@ def scan_zip(path: Path, required: list[str]) -> list[str]:
                     issues.append(f"{path}: forbidden path entry {name}")
             if Path(name).name in {"manuscript_source_EPSR.tex"}:
                 issues.append(f"{path}: duplicate competing manuscript source {name}")
+            if required == REQUIRED_PUBLIC_FILES and Path(name).suffix.lower() in NESTED_ARCHIVE_SUFFIXES:
+                issues.append(f"{path}: nested archive is not permitted: {name}")
             if text_entry(name):
-                issues.extend(scan_text(f"{path}:{name}", archive.read(name)))
+                data = archive.read(name)
+                issues.extend(scan_text(f"{path}:{name}", data))
+                normalized = name.replace("\\", "/").lower()
+                if required == REQUIRED_PUBLIC_FILES and normalized not in SCANNER_RULE_FILES and "/tests/" not in f"/{normalized}":
+                    try:
+                        text = data.decode("utf-8")
+                    except UnicodeDecodeError:
+                        text = data.decode("latin-1", errors="ignore")
+                    for pattern, label in OBSOLETE_DATASET_VERSION_PATTERNS:
+                        if pattern.search(text):
+                            issues.append(f"{path}:{name}: {label}")
     return issues
 
 
@@ -156,13 +178,30 @@ def scan_directory(path: Path, required: list[str]) -> list[str]:
                 issues.append(f"{path}: forbidden path file {rel}")
         if Path(rel).name in {"manuscript_source_EPSR.tex"}:
             issues.append(f"{path}: duplicate competing manuscript source {rel}")
+        if required == REQUIRED_PUBLIC_FILES and Path(rel).suffix.lower() in NESTED_ARCHIVE_SUFFIXES:
+            issues.append(f"{path}: nested archive is not permitted: {rel}")
         if text_entry(rel):
-            issues.extend(scan_text(f"{path}:{rel}", file_path.read_bytes()))
+            data = file_path.read_bytes()
+            issues.extend(scan_text(f"{path}:{rel}", data))
+            normalized = rel.replace("\\", "/").lower()
+            if required == REQUIRED_PUBLIC_FILES and normalized not in SCANNER_RULE_FILES and "/tests/" not in f"/{normalized}":
+                try:
+                    text = data.decode("utf-8")
+                except UnicodeDecodeError:
+                    text = data.decode("latin-1", errors="ignore")
+                for pattern, label in OBSOLETE_DATASET_VERSION_PATTERNS:
+                    if pattern.search(text):
+                        issues.append(f"{path}:{rel}: {label}")
     return issues
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--public-package",
+        metavar="PATH",
+        help="audit one extracted public reproducibility package without requiring author-workspace artifacts",
+    )
     parser.add_argument("--submission-zip", default=str(ROOT / "submission_epsr.zip"))
     parser.add_argument("--flat-zip", default=str(ROOT / "submission_epsr" / "submission_files" / "latex_source_main_EPSR_flat.zip"))
     parser.add_argument("--submission-dir", default=str(ROOT / "submission_epsr" / "submission_files"))
@@ -174,15 +213,18 @@ def main() -> None:
     parser.add_argument("--report", default=str(REPORT_DIR / "package_preflight_report_A.md"))
     args = parser.parse_args()
 
-    checks = [
-        ("submission zip", Path(args.submission_zip), REQUIRED_SUBMISSION_FILES),
-        ("flat latex zip", Path(args.flat_zip), ["main.tex", "supplementary_material.tex", "references.bib"]),
-        ("submission dir", Path(args.submission_dir), REQUIRED_SUBMISSION_FILES),
-        ("public dir", Path(args.public_dir), REQUIRED_PUBLIC_FILES),
-        ("mendeley zip", Path(args.mendeley_zip), REQUIRED_PUBLIC_FILES),
-    ]
+    if args.public_package:
+        checks = [("public package", Path(args.public_package).resolve(), REQUIRED_PUBLIC_FILES)]
+    else:
+        checks = [
+            ("submission zip", Path(args.submission_zip), REQUIRED_SUBMISSION_FILES),
+            ("flat latex zip", Path(args.flat_zip), ["main.tex", "supplementary_material.tex", "references.bib"]),
+            ("submission dir", Path(args.submission_dir), REQUIRED_SUBMISSION_FILES),
+            ("public dir", Path(args.public_dir), REQUIRED_PUBLIC_FILES),
+            ("mendeley zip", Path(args.mendeley_zip), REQUIRED_PUBLIC_FILES),
+        ]
     all_issues: list[str] = []
-    lines = ["# Package Preflight Report - Agent A", ""]
+    lines = ["# Package Preflight Report", ""]
     for label, path, required in checks:
         if not path.exists():
             issues = [f"{path}: missing path"]

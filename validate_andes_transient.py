@@ -1,4 +1,4 @@
-"""ANDES nonlinear transient-stability validation for IAC frequency support.
+"""ANDES nonlinear transient-stability frequency check for IAC support.
 
 The script builds controller-specific IEEE 14-bus dynamic cases from ANDES'
 bundled benchmark and injects aggregate IAC active-power relief through timed
