@@ -6,6 +6,6 @@ This repository is a GitHub mirror of the reproducibility package deposited in M
 
 Formal dataset record:
 
-https://doi.org/10.17632/kdbtxv66n9.3
+https://doi.org/10.17632/kdbtxv66n9.4
 
 The repository contains the Python/OpenDSS simulation framework, calibration scripts, validation scripts, representative experiment traces, generated result summaries, figures, tables, and regression tests needed to reproduce the reported computational results. See `README_RESEARCH_DATA_EPSR.txt` for the recommended reviewer workflow.
